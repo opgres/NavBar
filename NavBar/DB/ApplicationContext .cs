@@ -14,9 +14,15 @@ namespace NavBar.DB
         public DbSet<TypeDrink> TypeDrinks => Set<TypeDrink>();
         public DbSet<User> Users => Set<User>();
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public ApplicationContext(DbContextOptions<ApplicationContext> options)
+            : base(options)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres");
+
+        }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Composition>().HasKey(x => new { x.CocktailId, x.IngredientId });
+            modelBuilder.Entity<Review>().HasKey(x => new { x.CocktailId, x.UserId });
         }
     }
 }
