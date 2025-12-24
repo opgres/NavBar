@@ -16,9 +16,4 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\User\Models\" />
-    <Folder Include="Controllers\Tag\Models\" />
-  </ItemGroup>
-
 </Project>
