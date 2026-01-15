@@ -29,15 +29,15 @@ namespace NavBar.Controllers.CocktailController
             };
             await db.Cocktails.AddAsync(cocktail);
             await db.SaveChangesAsync();
-            Console.WriteLine("Сохранили в бд ");
-            return Ok("Сохранили в бд ");
+            Console.WriteLine("Сохранили в бд коктейль");
+            return Ok("Сохранили в бд коктейль");
         }
 
         [HttpGet("readAll")]
         public async Task<List<Cocktail>> ReadAll()
         {
             var cocktails = await db.Cocktails.ToListAsync();
-            Console.WriteLine("Все :");
+            Console.WriteLine("Все коктейли:");
             return cocktails;
         }
 
@@ -45,8 +45,8 @@ namespace NavBar.Controllers.CocktailController
         public async Task<IActionResult> Delete(CocktailRequest cocktailRequest)
         {
             await db.Cocktails.Where(x => x.Id == cocktailRequest.Id).ExecuteDeleteAsync();
-            Console.WriteLine("Удалили ");
-            return Ok("Удалили ");
+            Console.WriteLine("Удалили коктейль");
+            return Ok("Удалили коктейль");
         }
 
         [HttpPut("update")]
@@ -55,8 +55,8 @@ namespace NavBar.Controllers.CocktailController
             await db.Cocktails
                     .Where(x => x.Id == cocktailRequest.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, cocktailRequest.Name));
-            Console.WriteLine("Обновили ");
-            return Ok("Обновили ");
+            Console.WriteLine("Обновили коктейль");
+            return Ok("Обновили коктейль");
         }
     }
 }

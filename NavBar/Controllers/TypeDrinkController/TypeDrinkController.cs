@@ -18,39 +18,39 @@ namespace NavBar.Controllers.TypeDrinkController
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create(CookingMethodRequest typeDrinkRequest)
+        public async Task<IActionResult> Create(TypeDrinkRequest typeDrinkRequest)
         {
             var typeDrink = new TypeDrink { Name = typeDrinkRequest.Name };
             await db.TypeDrinks.AddAsync(typeDrink);
             await db.SaveChangesAsync();
-            Console.WriteLine("Сохранили в бд ");
-            return Ok("Сохранили в бд");
+            Console.WriteLine("Сохранили в бд тип напитка");
+            return Ok("Сохранили в бд тип напитка");
         }
 
         [HttpGet("readAll")]
         public async Task<List<TypeDrink>> ReadAll()
         {
             var typeDrinks = await db.TypeDrinks.ToListAsync();
-            Console.WriteLine("Все:");
+            Console.WriteLine("Все типы напитка:");
             return typeDrinks;
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(CookingMethodRequest typeDrinkRequest)
+        public async Task<IActionResult> Delete(TypeDrinkRequest typeDrinkRequest)
         {
             await db.TypeDrinks.Where(x => x.Id == typeDrinkRequest.Id).ExecuteDeleteAsync();
-            Console.WriteLine("Удалили");
-            return Ok("Удалили");
+            Console.WriteLine("Удалили тип напитка");
+            return Ok("Удалили тип напитка");
         }
 
         [HttpPut("update")]
-        public async Task<IActionResult> Update(CookingMethodRequest typeDrinkRequest)
+        public async Task<IActionResult> Update(TypeDrinkRequest typeDrinkRequest)
         {
             await db.TypeDrinks
                     .Where(x => x.Id == typeDrinkRequest.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, typeDrinkRequest.Name));
-            Console.WriteLine("Обновили");
-            return Ok("Обновили");
+            Console.WriteLine("Обновили тип напитка");
+            return Ok("Обновили тип напитка");
         }
     }
 }

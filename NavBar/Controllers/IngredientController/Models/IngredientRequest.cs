@@ -3,7 +3,7 @@
     public class IngredientRequest
     {
         public int Id { get; set; }
-        public required string Name { get; set; }
+        public string? Name { get; set; }
         public float V { get; set; }
         public float AvgBuyPrice { get; set; }
         public string? Color { get; set; }

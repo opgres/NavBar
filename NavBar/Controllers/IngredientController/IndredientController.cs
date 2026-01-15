@@ -33,8 +33,8 @@ namespace NavBar.Controllers.IngredientController
             };
             await db.Ingredients.AddAsync(ingredient);
             await db.SaveChangesAsync();
-            Console.WriteLine("Сохранили в бд");
-            return Ok();
+            Console.WriteLine("Сохранили в бд ингредиент");
+            return Ok("Сохранили в бд ингредиент");
         }
 
         [HttpGet("readAll")]
@@ -50,7 +50,7 @@ namespace NavBar.Controllers.IngredientController
         {
             await db.Ingredients.Where(x => x.Id == ingredientRequest.Id).ExecuteDeleteAsync();
             Console.WriteLine("Удалили ингредиент");
-            return Ok();
+            return Ok("Удалили ингредиент");
         }
 
         [HttpPut("update")]
@@ -60,7 +60,7 @@ namespace NavBar.Controllers.IngredientController
                     .Where(x => x.Id == ingredientRequest.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, ingredientRequest.Name));
             Console.WriteLine("Обновили ингредиент");
-            return Ok();
+            return Ok("Обновили ингредиент");
         }
     }
 }

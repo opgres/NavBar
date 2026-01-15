@@ -23,15 +23,15 @@ namespace NavBar.Controllers.TagController
             var tag = new Tag { Name = tagRequest.Name };
             await db.Tags.AddAsync(tag);
             await db.SaveChangesAsync();
-            Console.WriteLine("Сохранили в бд");
-            return Ok();
+            Console.WriteLine("Сохранили в бд тэг");
+            return Ok("Сохранили в бд тэг");
         }
 
         [HttpGet("readAll")]
         public async Task<List<Tag>> ReadAll()
         {
             var tags = await db.Tags.ToListAsync();
-            Console.WriteLine("Все Тэги:");
+            Console.WriteLine("Все тэги:");
             return tags;
         }
 
@@ -40,7 +40,7 @@ namespace NavBar.Controllers.TagController
         {
             await db.Tags.Where(x => x.Id == tagRequest.Id).ExecuteDeleteAsync();
             Console.WriteLine("Удалили тэг");
-            return Ok();
+            return Ok("Удалили тэг");
         }
 
         [HttpPut("update")]
@@ -50,7 +50,7 @@ namespace NavBar.Controllers.TagController
                     .Where(x => x.Id == tagRequest.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, tagRequest.Name));
             Console.WriteLine("Обновили тэг");
-            return Ok();
+            return Ok("Обновили тэг");
         }
     }
 }

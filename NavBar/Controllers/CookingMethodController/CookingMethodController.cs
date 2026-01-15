@@ -23,15 +23,15 @@ namespace NavBar.Controllers.CookingMethodController
             var cookingMethod = new CookingMethod { Name = cookingMethodRequest.Name };
             await db.CookingMethods.AddAsync(cookingMethod);
             await db.SaveChangesAsync();
-            Console.WriteLine("Сохранили в бд ");
-            return Ok("Сохранили в бд ");
+            Console.WriteLine("Сохранили в бд метод приготовления");
+            return Ok("Сохранили в бд метод приготовления");
         }
 
         [HttpGet("readAll")]
         public async Task<List<CookingMethod>> ReadAll()
         {
             var cookingMethods = await db.CookingMethods.ToListAsync();
-            Console.WriteLine("Все :");
+            Console.WriteLine("Все методы приготовления:");
             return cookingMethods;
         }
 
@@ -39,8 +39,8 @@ namespace NavBar.Controllers.CookingMethodController
         public async Task<IActionResult> Delete(CookingMethodRequest cookingMethodRequest)
         {
             await db.CookingMethods.Where(x => x.Id == cookingMethodRequest.Id).ExecuteDeleteAsync();
-            Console.WriteLine("Удалили ");
-            return Ok("Удалили ");
+            Console.WriteLine("Удалили метод приготовления");
+            return Ok("Удалили метод приготовления");
         }
 
         [HttpPut("update")]
@@ -49,8 +49,8 @@ namespace NavBar.Controllers.CookingMethodController
             await db.CookingMethods
                     .Where(x => x.Id == cookingMethodRequest.Id)
                     .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, cookingMethodRequest.Name));
-            Console.WriteLine("Обновили ");
-            return Ok("Обновили ");
+            Console.WriteLine("Обновили метод приготовления");
+            return Ok("Обновили метод приготовления");
         }
     }
 }
