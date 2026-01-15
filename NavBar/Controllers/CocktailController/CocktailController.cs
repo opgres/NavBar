@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NavBar.Controllers.CocktailController.Models;
 using NavBar.Controllers.CocktailRequestontroller.Models;
 using NavBar.DB;
 using NavBar.Models;
+
 
 namespace NavBar.Controllers.CocktailController
 {
@@ -15,6 +17,48 @@ namespace NavBar.Controllers.CocktailController
         public CocktailController(ApplicationContext context)
         {
             db = context;
+        }
+
+        [HttpPost("normalcreate")]
+        public async Task<IActionResult> NormalCreate(CocktailRequestCreate cocktailRequestCreate)
+        {
+            var cocktail = new Cocktail
+            {
+                Name = cocktailRequestCreate.Name,
+                Description = cocktailRequestCreate.Description,
+                Image = cocktailRequestCreate.Image,
+                CookingMethodId = cocktailRequestCreate.CookingMethodId,
+            };
+
+            await db.Cocktails.AddAsync(cocktail);
+
+            foreach (var part in cocktailRequestCreate.CocktailRequestCreateIngredients)
+            {
+                cocktail.Compositions.Add(new Composition
+                {
+                    IngredientId = part.IngredientId,
+                    V = part.V,
+                });
+            }
+
+            foreach (var tag in cocktailRequestCreate.CocktailRequestCreateTags)
+            {
+                if (tag.TagId == 0)
+                {
+                    var newTag = new Tag { Name = tag.Name };
+                    await db.Tags.AddAsync(newTag);
+                    cocktail.Tags.Add(newTag);
+                }
+                else
+                {
+                    var oldTag = await db.Tags.FirstOrDefaultAsync(x => x.Id == tag.TagId);
+                    if (oldTag != null)
+                        cocktail.Tags.Add(oldTag);
+                }
+            }
+            await db.SaveChangesAsync();
+            Console.WriteLine("Сохранили в бд коктейль");
+            return Ok("Сохранили в бд коктейль");
         }
 
         [HttpPost("create")]
@@ -34,11 +78,65 @@ namespace NavBar.Controllers.CocktailController
         }
 
         [HttpGet("readAll")]
-        public async Task<List<Cocktail>> ReadAll()
+        public async Task<List<CocktailRequestGetAll>> ReadAll()
         {
-            var cocktails = await db.Cocktails.ToListAsync();
+            var cocktails = await db.Cocktails
+                .Include(x => x.Compositions).ThenInclude(x => x.Ingredient)
+                .Include(x => x.Reviews).ThenInclude(x => x.User)
+                .Include(x => x.Tags)
+                .ToListAsync();
+            var allCocktails = new List<CocktailRequestGetAll>();
+            foreach (var cocktail in cocktails)
+            {
+                var ingredients = new List<CocktailRequestGetAllIngredient>();
+                foreach (var ingredient in cocktail.Compositions)
+                {
+                    ingredients.Add(new CocktailRequestGetAllIngredient
+                    {
+                        IngredientId = ingredient.IngredientId,
+                        V = ingredient.V,
+                        Name = ingredient.Ingredient.Name,
+                    });
+                }
+
+
+                var reviews = new List<CocktailRequestGetAllReview>();
+                foreach (var review in cocktail.Reviews)
+                {
+                    reviews.Add(new CocktailRequestGetAllReview
+                    {
+                        UserId = review.UserId,
+                        Score = review.Score,
+                        Comment = review.Comment,
+                        Name = review.User.Name,
+                    });
+                }
+                var tags = new List<CocktailRequestGetAllTag>();
+                foreach (var tag in cocktail.Tags)
+                {
+                    tags.Add(new CocktailRequestGetAllTag
+                    {
+                        Name = tag.Name,
+                    });
+                }
+
+
+                allCocktails.Add(new CocktailRequestGetAll
+                {
+                    Id = cocktail.Id,
+                    Name = cocktail.Name,
+                    Description = cocktail.Description,
+                    Image = cocktail.Image,
+                    CookingMethodId = cocktail.CookingMethodId,
+                    CookingMethod = cocktail.CookingMethod,
+                    CocktailRequestGetAllIngredients = ingredients,
+                    CocktailRequestGetAllReviews = reviews,
+                    CocktailRequestGetAllTags = tags,
+                });
+            }
+
             Console.WriteLine("Все коктейли:");
-            return cocktails;
+            return allCocktails;
         }
 
         [HttpDelete("delete")]
