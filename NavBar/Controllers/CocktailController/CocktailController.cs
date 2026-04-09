@@ -19,7 +19,7 @@ namespace NavBar.Controllers.CocktailController
             db = context;
         }
 
-        [HttpPost("normalcreate")]
+        [HttpPost("create")]
         public async Task<IActionResult> NormalCreate(CocktailRequestCreate cocktailRequestCreate)
         {
             var cocktail = new Cocktail
@@ -61,21 +61,21 @@ namespace NavBar.Controllers.CocktailController
             return Ok("Сохранили в бд коктейль");
         }
 
-        [HttpPost("create")]
-        public async Task<IActionResult> Create(CocktailRequest cocktailRequest)
-        {
-            var cocktail = new Cocktail
-            {
-                Name = cocktailRequest.Name,
-                Description = cocktailRequest.Description,
-                Image = cocktailRequest.Image,
-                CookingMethodId = cocktailRequest.CookingMethodId
-            };
-            await db.Cocktails.AddAsync(cocktail);
-            await db.SaveChangesAsync();
-            Console.WriteLine("Сохранили в бд коктейль");
-            return Ok("Сохранили в бд коктейль");
-        }
+        //[HttpPost("create")] poor
+        //public async Task<IActionResult> Create(CocktailRequest cocktailRequest)
+        //{
+        //    var cocktail = new Cocktail
+        //    {
+        //        Name = cocktailRequest.Name,
+        //        Description = cocktailRequest.Description,
+        //        Image = cocktailRequest.Image,
+        //        CookingMethodId = cocktailRequest.CookingMethodId
+        //    };
+        //    await db.Cocktails.AddAsync(cocktail);
+        //    await db.SaveChangesAsync();
+        //    Console.WriteLine("Сохранили в бд коктейль");
+        //    return Ok("Сохранили в бд коктейль");
+        //}
 
         [HttpGet("readAll")]
         public async Task<List<CocktailRequestGetAll>> ReadAll()
@@ -85,6 +85,7 @@ namespace NavBar.Controllers.CocktailController
                 .Include(x => x.Reviews).ThenInclude(x => x.User)
                 .Include(x => x.Tags)
                 .ToListAsync();
+
             var allCocktails = new List<CocktailRequestGetAll>();
             foreach (var cocktail in cocktails)
             {
@@ -98,8 +99,6 @@ namespace NavBar.Controllers.CocktailController
                         Name = ingredient.Ingredient.Name,
                     });
                 }
-
-
                 var reviews = new List<CocktailRequestGetAllReview>();
                 foreach (var review in cocktail.Reviews)
                 {
@@ -155,6 +154,33 @@ namespace NavBar.Controllers.CocktailController
                     .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, cocktailRequest.Name));
             Console.WriteLine("Обновили коктейль");
             return Ok("Обновили коктейль");
+        }
+
+        [HttpGet("readAllFilter")]
+        public async Task<List<Cocktail>> ReadAllFilter([FromQuery] Availability availability, [FromQuery] int[] ingredientIds,
+            [FromQuery] int[] tagIds, [FromQuery] int[] scores, [FromQuery] int[] cookingMethodIds, [FromQuery] bool isFavorite)
+        {
+            var query = db.Cocktails.AsQueryable();
+            query = query.Include(x => x.Tags).Include(x => x.CookingMethod)
+            .Include(x => x.Reviews)
+            .Include(x => x.Compositions).ThenInclude(x => x.Ingredient);
+            switch (availability)
+            {
+                case Availability.Available:
+                    query = query.Where(x => x.Compositions.Any(i => i.Ingredient.V > 0));
+                    break;
+                case Availability.Unavailable:
+                    query = query.Where(x => x.Compositions.Any(i => i.Ingredient.V <= 0));
+                    break;
+                case Availability.All:
+                    break;
+                default:
+                    query = query.Where(x => x.Compositions.Any(i => i.Ingredient.V > 0));
+                    break;
+            }
+            var cocktails = await query.ToListAsync();
+
+            return cocktails;
         }
     }
 }

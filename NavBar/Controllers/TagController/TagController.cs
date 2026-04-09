@@ -18,7 +18,7 @@ namespace NavBar.Controllers.TagController
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create(UserRequest tagRequest)
+        public async Task<IActionResult> Create(TagRequest tagRequest)
         {
             var tag = new Tag { Name = tagRequest.Name };
             await db.Tags.AddAsync(tag);
@@ -36,7 +36,7 @@ namespace NavBar.Controllers.TagController
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(UserRequest tagRequest)
+        public async Task<IActionResult> Delete(TagRequest tagRequest)
         {
             await db.Tags.Where(x => x.Id == tagRequest.Id).ExecuteDeleteAsync();
             Console.WriteLine("Удалили тэг");
@@ -44,7 +44,7 @@ namespace NavBar.Controllers.TagController
         }
 
         [HttpPut("update")]
-        public async Task<IActionResult> Update(UserRequest tagRequest)
+        public async Task<IActionResult> Update(TagRequest tagRequest)
         {
             await db.Tags
                     .Where(x => x.Id == tagRequest.Id)

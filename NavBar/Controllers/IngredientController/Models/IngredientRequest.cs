@@ -6,10 +6,8 @@
         public string? Name { get; set; }
         public float V { get; set; }
         public float AvgBuyPrice { get; set; }
-        public string? Color { get; set; }
-        public string? Ro { get; set; }
         public string? Strength { get; set; }
-        public int TypeDrinkId { get; set; }
+        public int? TypeDrinkId { get; set; }
 
     }
 }

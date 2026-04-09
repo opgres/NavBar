@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NavBar.Controllers.TagController.Models;
+using NavBar.Controllers.UserController.Models;
 using NavBar.DB;
 using NavBar.Models;
 
@@ -21,7 +21,11 @@ namespace NavBar.Controllers.UserController
         [HttpPost("create")]
         public async Task<IActionResult> Create(UserRequest userRequest)
         {
-            var user = new User { Name = userRequest.Name };
+            var user = new User
+            {
+                Name = userRequest.Name,
+                Surname = userRequest.Surname
+            };
             await db.Users.AddAsync(user);
             await db.SaveChangesAsync();
             Console.WriteLine("Сохранили в бд пользователя");
@@ -49,9 +53,30 @@ namespace NavBar.Controllers.UserController
         {
             await db.Users
                     .Where(x => x.Id == userRequest.Id)
-                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, userRequest.Name));
+                    .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.Name, userRequest.Name)
+                    .SetProperty(x => x.Surname, userRequest.Surname));
             Console.WriteLine("Обновили пользователя");
             return Ok("Обновили пользователя");
+        }
+
+        [HttpPost("entry")]
+        public async Task<IActionResult> Entry(UserRequest userRequest)
+        {
+
+            var user = await db.Users
+                .Where(x => x.Name == userRequest.Name)
+                .Where(x => x.Surname == userRequest.Surname)
+                .FirstOrDefaultAsync();
+            if (user != null)
+            {
+                return Ok("Пользователь найден");
+            }
+            else
+            {
+                return Forbid("Пользователь не найден");
+            }
+
         }
     }
 }
