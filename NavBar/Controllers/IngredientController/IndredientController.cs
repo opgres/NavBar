@@ -20,15 +20,15 @@ namespace NavBar.Controllers.IngredientController
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create(IngredientRequest ingredientRequest)
+        public async Task<IActionResult> Create(IngredientRequestCreate ingredientRequestCreate)
         {
             var ingredient = new Ingredient
             {
-                Name = ingredientRequest.Name,
-                AvgBuyPrice = ingredientRequest.AvgBuyPrice,
-                Strength = ingredientRequest.Strength,
-                V = ingredientRequest.V,
-                TypeDrinkId = ingredientRequest.TypeDrinkId
+                Name = ingredientRequestCreate.Name,
+                PricePerVolume = ingredientRequestCreate.BuyPrice / ingredientRequestCreate.V,
+                Strength = ingredientRequestCreate.Strength,
+                V = ingredientRequestCreate.V,
+                TypeDrinkId = ingredientRequestCreate.TypeDrinkId
             };
             await db.Ingredients.AddAsync(ingredient);
             await db.SaveChangesAsync();
@@ -45,21 +45,55 @@ namespace NavBar.Controllers.IngredientController
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(IngredientRequest ingredientRequest)
+        public async Task<IActionResult> Delete(int ingredientId)
         {
-            await db.Ingredients.Where(x => x.Id == ingredientRequest.Id).ExecuteDeleteAsync();
+            await db.Ingredients.Where(x => x.Id == ingredientId).ExecuteDeleteAsync();
             Console.WriteLine("Удалили ингредиент");
             return Ok("Удалили ингредиент");
         }
 
         [HttpPut("update")]
-        public async Task<IActionResult> Update(IngredientRequest ingredientRequest)
+        public async Task<IActionResult> Update(IngredientRequestUpdate ingredientRequestUpdate)
         {
-            await db.Ingredients
-                    .Where(x => x.Id == ingredientRequest.Id)
-                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, ingredientRequest.Name));
+            var ingredient = await db.Ingredients.FindAsync(ingredientRequestUpdate.Id);
+            if (ingredient != null)
+            {
+                if (ingredientRequestUpdate.Name != null)
+                {
+                    ingredient.Name = ingredientRequestUpdate.Name;
+                }
+                if (ingredientRequestUpdate.V != null)
+                {
+                    ingredient.V = (float)ingredientRequestUpdate.V;
+                }
+                if (ingredientRequestUpdate.Strength != null)
+                {
+                    ingredient.Strength = ingredientRequestUpdate.Strength;
+                }
+                if (ingredientRequestUpdate.TypeDrinkId != null)
+                {
+                    ingredient.TypeDrinkId = ingredientRequestUpdate.TypeDrinkId;
+                }
+                if (ingredientRequestUpdate.PricePerVolume != null)
+                {
+                    ingredient.PricePerVolume = (float)ingredientRequestUpdate.PricePerVolume;
+                }
+                db.SaveChanges();
+            }
             Console.WriteLine("Обновили ингредиент");
             return Ok("Обновили ингредиент");
+        }
+
+        [HttpPut("buyToExist")]
+        public async Task<IActionResult> BuyToExist(IngredientRequestBuyToExist ingredientRequestBuyToExist)
+        {
+            await db.Ingredients
+                    .Where(x => x.Id == ingredientRequestBuyToExist.Id)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.V, x => x.V + ingredientRequestBuyToExist.VAdd)
+                                              .SetProperty(x => x.PricePerVolume, ingredientRequestBuyToExist.BuyPrice / ingredientRequestBuyToExist.VAdd));
+
+            Console.WriteLine("Обновили цену за объем у ингредиента");
+            return Ok("Обновили цену за объем у ингредиента");
         }
 
         [HttpGet("readAllFilter")]

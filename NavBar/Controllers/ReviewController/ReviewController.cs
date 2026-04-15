@@ -29,6 +29,7 @@ namespace NavBar.Controllers.ReviewController
                     CocktailId = reviewRequestCreate.CocktailId,
                     Comment = reviewRequestCreate.Comment,
                     Score = reviewRequestCreate.Score,
+                    IsFavorite = reviewRequestCreate.IsFavorite
                 });
 
 
@@ -37,6 +38,29 @@ namespace NavBar.Controllers.ReviewController
             await db.SaveChangesAsync();
             Console.WriteLine("Сохранили в бд оценку коктейля");
             return Ok("Сохранили в бд оценку коктейля");
+        }
+
+        [HttpPost("changeFavorites")]
+        public async Task<IActionResult> ChangeFavorites(ReviewRequest reviewRequest)
+        {
+            var review = await db.Reviews.FirstOrDefaultAsync(r => r.CocktailId == reviewRequest.CocktailId
+                                                                 & r.UserId == reviewRequest.UserId);
+            if (review == null)
+            {
+                review = new Review();
+                review.UserId = reviewRequest.UserId;
+                review.CocktailId = reviewRequest.CocktailId;
+                await db.Reviews.AddAsync(review);
+            }
+
+            if (reviewRequest.IsFavorite != null)
+            {
+                review.IsFavorite = reviewRequest.IsFavorite;
+            }
+
+
+            await db.SaveChangesAsync();
+            return Ok("Изменили избранность коктейля");
         }
     }
 }

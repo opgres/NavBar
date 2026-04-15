@@ -28,6 +28,8 @@ namespace NavBar.Controllers.CocktailController
                 Description = cocktailRequestCreate.Description,
                 Image = cocktailRequestCreate.Image,
                 CookingMethodId = cocktailRequestCreate.CookingMethodId,
+                Compositions = new(),
+                Tags = new(),
             };
 
             await db.Cocktails.AddAsync(cocktail);
@@ -84,86 +86,96 @@ namespace NavBar.Controllers.CocktailController
                 .Include(x => x.Compositions).ThenInclude(x => x.Ingredient)
                 .Include(x => x.Reviews).ThenInclude(x => x.User)
                 .Include(x => x.Tags)
+                .Include(x => x.CookingMethod)
                 .ToListAsync();
 
-            var allCocktails = new List<CocktailRequestGetAll>();
-            foreach (var cocktail in cocktails)
-            {
-                var ingredients = new List<CocktailRequestGetAllIngredient>();
-                foreach (var ingredient in cocktail.Compositions)
-                {
-                    ingredients.Add(new CocktailRequestGetAllIngredient
-                    {
-                        IngredientId = ingredient.IngredientId,
-                        V = ingredient.V,
-                        Name = ingredient.Ingredient.Name,
-                    });
-                }
-                var reviews = new List<CocktailRequestGetAllReview>();
-                foreach (var review in cocktail.Reviews)
-                {
-                    reviews.Add(new CocktailRequestGetAllReview
-                    {
-                        UserId = review.UserId,
-                        Score = review.Score,
-                        Comment = review.Comment,
-                        Name = review.User.Name,
-                    });
-                }
-                var tags = new List<CocktailRequestGetAllTag>();
-                foreach (var tag in cocktail.Tags)
-                {
-                    tags.Add(new CocktailRequestGetAllTag
-                    {
-                        Name = tag.Name,
-                    });
-                }
+            var allCocktails = Convert.ConvertCocktailsToCocktailRequestGetAll(cocktails);
 
-
-                allCocktails.Add(new CocktailRequestGetAll
-                {
-                    Id = cocktail.Id,
-                    Name = cocktail.Name,
-                    Description = cocktail.Description,
-                    Image = cocktail.Image,
-                    CookingMethodId = cocktail.CookingMethodId,
-                    CookingMethod = cocktail.CookingMethod,
-                    CocktailRequestGetAllIngredients = ingredients,
-                    CocktailRequestGetAllReviews = reviews,
-                    CocktailRequestGetAllTags = tags,
-                });
-            }
-
-            Console.WriteLine("Все коктейли:");
+            Console.WriteLine("Все коктейли с фильтрами");
             return allCocktails;
         }
 
         [HttpDelete("delete")]
-        public async Task<IActionResult> Delete(CocktailRequest cocktailRequest)
+        public async Task<IActionResult> Delete(int cocktailId)
         {
-            await db.Cocktails.Where(x => x.Id == cocktailRequest.Id).ExecuteDeleteAsync();
+            await db.Cocktails.Where(x => x.Id == cocktailId).ExecuteDeleteAsync();
             Console.WriteLine("Удалили коктейль");
             return Ok("Удалили коктейль");
         }
 
         [HttpPut("update")]
-        public async Task<IActionResult> Update(CocktailRequest cocktailRequest)
+        public async Task<IActionResult> Update(CocktailRequestUpdate cocktailRequestUpdate)
         {
-            await db.Cocktails
-                    .Where(x => x.Id == cocktailRequest.Id)
-                    .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.Name, cocktailRequest.Name));
+            var cocktail = await db.Cocktails
+                .Include(x => x.Compositions).ThenInclude(x => x.Ingredient)
+                .Include(x => x.Reviews).ThenInclude(x => x.User)
+                .Include(x => x.Tags)
+                .Include(x => x.CookingMethod)
+                .Where(c => c.Id == cocktailRequestUpdate.Id)
+                .FirstOrDefaultAsync();
+            if (cocktail != null)
+            {
+                if (cocktailRequestUpdate.Name != null)
+                {
+                    cocktail.Name = cocktailRequestUpdate.Name;
+                }
+                if (cocktailRequestUpdate.Description != null)
+                {
+                    cocktail.Description = cocktailRequestUpdate.Description;
+                }
+                if (cocktailRequestUpdate.Image != null)
+                {
+                    cocktail.Image = cocktailRequestUpdate.Image;
+                }
+                if (cocktailRequestUpdate.CookingMethodId != null)
+                {
+                    cocktail.CookingMethodId = (int)cocktailRequestUpdate.CookingMethodId;
+                }
+                if (cocktailRequestUpdate.CocktailRequestUpdateIngredients != null)
+                {
+                    cocktail.Compositions.Clear();
+                    foreach (var ingredient in cocktailRequestUpdate.CocktailRequestUpdateIngredients)
+                    {
+                        cocktail.Compositions.Add(new Composition
+                        {
+                            IngredientId = ingredient.IngredientId,
+                            V = ingredient.V,
+                        });
+                    }
+                }
+                if (cocktailRequestUpdate.CocktailRequestUpdateTags != null)
+                {
+                    cocktail.Tags.Clear();
+                    foreach (var tag in cocktailRequestUpdate.CocktailRequestUpdateTags)
+                    {
+                        if (tag.TagId == 0)
+                        {
+                            var newTag = new Tag { Name = tag.Name };
+                            await db.Tags.AddAsync(newTag);
+                            cocktail.Tags.Add(newTag);
+                        }
+                        else
+                        {
+                            var oldTag = await db.Tags.FirstOrDefaultAsync(x => x.Id == tag.TagId);
+                            if (oldTag != null)
+                                cocktail.Tags.Add(oldTag);
+                        }
+                    }
+                }
+                db.SaveChanges();
+            }
             Console.WriteLine("Обновили коктейль");
             return Ok("Обновили коктейль");
         }
 
         [HttpGet("readAllFilter")]
-        public async Task<List<Cocktail>> ReadAllFilter([FromQuery] Availability availability, [FromQuery] int[] ingredientIds,
-            [FromQuery] int[] tagIds, [FromQuery] int[] scores, [FromQuery] int[] cookingMethodIds, [FromQuery] bool isFavorite)
+        public async Task<List<CocktailRequestGetAll>> ReadAllFilter([FromQuery] Availability availability, [FromQuery] int[] ingredientIds,
+            [FromQuery] int[] tagIds, [FromQuery] int?[] scores, [FromQuery] int[] cookingMethodIds, [FromQuery] bool? isFavorite = default)
         {
             var query = db.Cocktails.AsQueryable();
             query = query.Include(x => x.Tags).Include(x => x.CookingMethod)
-            .Include(x => x.Reviews)
-            .Include(x => x.Compositions).ThenInclude(x => x.Ingredient);
+                .Include(x => x.Reviews).ThenInclude(x => x.User)
+                .Include(x => x.Compositions).ThenInclude(x => x.Ingredient);
             switch (availability)
             {
                 case Availability.Available:
@@ -178,9 +190,117 @@ namespace NavBar.Controllers.CocktailController
                     query = query.Where(x => x.Compositions.Any(i => i.Ingredient.V > 0));
                     break;
             }
+
+            if (ingredientIds.Length > 0)
+            {
+                query = query.Where(x => x.Compositions.Any(c => ingredientIds.Contains(c.IngredientId)));
+            }
+
+            if (tagIds.Length > 0)
+            {
+                query = query.Where(x => x.Tags.Any(t => tagIds.Contains(t.Id)));
+            }
+
+            if (scores.Length > 0)
+            {
+                query = query.Where(x => x.Reviews.Any(r => scores.Contains(r.Score)));
+            }
+
+            if (cookingMethodIds.Length > 0)
+            {
+                query = query.Where(x => cookingMethodIds.Contains(x.CookingMethodId));
+            }
+
+            if (isFavorite != null)
+            {
+                query = query.Where(x => x.Reviews.Any(r => r.IsFavorite == isFavorite));
+            }
             var cocktails = await query.ToListAsync();
 
-            return cocktails;
+            var allCocktails = Convert.ConvertCocktailsToCocktailRequestGetAll(cocktails);
+
+            Console.WriteLine("Все коктейли с фильтрами");
+            return allCocktails;
+        }
+
+        [HttpGet("read")]
+        public async Task<CocktailRequestGetAll> Read([FromQuery] int cocktailId)
+        {
+            var cocktails = await db.Cocktails.Include(x => x.Tags).Include(x => x.CookingMethod)
+                .Include(x => x.Reviews).ThenInclude(x => x.User)
+                .Include(x => x.Compositions).ThenInclude(x => x.Ingredient)
+                .Where(x => x.Id == cocktailId)
+                .ToListAsync();
+
+            var cocktailAll = Convert.ConvertCocktailsToCocktailRequestGetAll(cocktails).FirstOrDefault();
+            Console.WriteLine("Ингредиент");
+            return cocktailAll;
+        }
+
+
+    }
+
+
+
+    public static class Convert
+    {
+        public static List<CocktailRequestGetAll> ConvertCocktailsToCocktailRequestGetAll(List<Cocktail> cocktails)
+        {
+            var cocktailsRequestGetAll = new List<CocktailRequestGetAll>();
+            foreach (var cocktail in cocktails)
+            {
+                float costPrice = 0;
+                var ingredientsInComposition = new List<CocktailRequestGetAllIngredientInComposition>();
+                foreach (var ingredientInComposition in cocktail.Compositions)
+                {
+                    ingredientsInComposition.Add(new CocktailRequestGetAllIngredientInComposition
+                    {
+                        IngredientId = ingredientInComposition.IngredientId,
+                        V = ingredientInComposition.V,
+                        Name = ingredientInComposition.Ingredient.Name,
+                    });
+                    costPrice = ingredientInComposition.V * ingredientInComposition.Ingredient.PricePerVolume;
+                }
+
+                var reviews = new List<CocktailRequestGetAllReview>();
+                foreach (var review in cocktail.Reviews)
+                {
+                    reviews.Add(new CocktailRequestGetAllReview
+                    {
+                        UserId = review.UserId,
+                        Score = review.Score,
+                        Comment = review.Comment,
+                        Name = review.User.Name,
+                        IsFavorite = review.IsFavorite,
+                    });
+                }
+
+                var tags = new List<CocktailRequestGetAllTag>();
+                foreach (var tag in cocktail.Tags)
+                {
+                    tags.Add(new CocktailRequestGetAllTag
+                    {
+                        TagId = tag.Id,
+                        Name = tag.Name,
+                    });
+                }
+
+                cocktailsRequestGetAll.Add(new CocktailRequestGetAll
+                {
+                    Id = cocktail.Id,
+                    Name = cocktail.Name,
+                    Description = cocktail.Description,
+                    Image = cocktail.Image,
+                    CostPrice = costPrice,
+                    CookingMethodId = cocktail.CookingMethodId,
+                    CookingMethod = cocktail.CookingMethod,
+                    CocktailRequestGetAllIngredients = ingredientsInComposition,
+                    CocktailRequestGetAllReviews = reviews,
+                    CocktailRequestGetAllTags = tags,
+                });
+            }
+
+            return cocktailsRequestGetAll;
         }
     }
 }

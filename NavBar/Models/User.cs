@@ -8,6 +8,5 @@
 
         public List<Review> Reviews { get; set; } = new();
 
-        public List<Cocktail> CustomCocktails { get; set; } = new();
     }
 }

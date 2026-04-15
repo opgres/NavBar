@@ -10,12 +10,10 @@
         public int CookingMethodId { get; set; }
         public CookingMethod CookingMethod { get; set; }
 
-        public List<Composition> Compositions { get; set; } = new();
-        public List<Review> Reviews { get; set; } = new();
+        public List<Composition> Compositions { get; set; }
+        public List<Review> Reviews { get; set; }
 
-
-
-        public List<Tag> Tags { get; set; } = new();
+        public List<Tag> Tags { get; set; }
 
     }
 }

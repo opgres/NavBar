@@ -1,6 +1,6 @@
 ﻿namespace NavBar.Controllers.ReviewController.Models
 {
-    public class ReviewRequestCreate
+    public class ReviewAddToFavorites
     {
         public int UserId { get; set; }
         public int CocktailId { get; set; }
