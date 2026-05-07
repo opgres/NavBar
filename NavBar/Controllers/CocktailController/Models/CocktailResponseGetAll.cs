@@ -2,7 +2,7 @@
 
 namespace NavBar.Controllers.CocktailController.Models
 {
-    public class CocktailRequestGetAll
+    public class CocktailResponseGetAll
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -12,25 +12,25 @@ namespace NavBar.Controllers.CocktailController.Models
         public int CookingMethodId { get; set; }
         public CookingMethod CookingMethod { get; set; }
 
-        public List<CocktailRequestGetAllIngredientInComposition> CocktailRequestGetAllIngredients { get; set; } = new();
-        public List<CocktailRequestGetAllReview> CocktailRequestGetAllReviews { get; set; } = new();
-        public List<CocktailRequestGetAllTag> CocktailRequestGetAllTags { get; set; } = new();
+        public List<CocktailResponseGetAllIngredientInComposition> CocktailRequestGetAllIngredients { get; set; } = new();
+        public List<CocktailResponseGetAllReview> CocktailRequestGetAllReviews { get; set; } = new();
+        public List<CocktailResponseGetAllTag> CocktailRequestGetAllTags { get; set; } = new();
 
     }
-    public class CocktailRequestGetAllTag
+    public class CocktailResponseGetAllTag
     {
         public int TagId { get; set; }
         public string Name { get; set; }
 
     }
-    public class CocktailRequestGetAllIngredientInComposition
+    public class CocktailResponseGetAllIngredientInComposition
     {
         public int IngredientId { get; set; }
         public string Name { get; set; }
         public float V { get; set; }
 
     }
-    public class CocktailRequestGetAllReview
+    public class CocktailResponseGetAllReview
     {
         public int UserId { get; set; }
         public string Name { get; set; }
